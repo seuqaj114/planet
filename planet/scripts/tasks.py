@@ -27,6 +27,7 @@ from planet import networks
 from planet import tools
 
 
+
 Task = collections.namedtuple(
     'Task', 'name, env_ctor, max_length, state_components')
 
@@ -115,6 +116,15 @@ def gym_racecar(config, params):
       'CarRacing-v0', obs_is_image=True)
   return Task('gym_racing', env_ctor, max_length, state_components)
 
+def gym_pendulum(config, params):
+  action_repeat = params.get('action_repeat', 2)
+  max_length = 50 // action_repeat
+  state_components = ['reward']
+  env_ctor = functools.partial(
+      _gym_env, action_repeat, config.batch_shape[1], max_length,
+      'PendulumPixels-v0', obs_is_image=True)
+  return Task('gym_pendulum', env_ctor, max_length, state_components)
+
 
 def _dm_control_env(action_repeat, max_length, domain, task):
   from dm_control import suite
@@ -128,6 +138,9 @@ def _dm_control_env(action_repeat, max_length, domain, task):
 
 def _gym_env(action_repeat, min_length, max_length, name, obs_is_image=False):
   import gym
+
+  from .envs import pendulum
+
   env = gym.make(name)
   env = control.wrappers.ActionRepeat(env, action_repeat)
   env = control.wrappers.NormalizeActions(env)
